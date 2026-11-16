@@ -1,8 +1,29 @@
+'use client';
+import { useState } from "react";
 import Image from "next/image";
 import "7.css/dist/7.scoped.css";
 
 // placeholder folders: rename these to whatever you want visitors to find
-const ITEMS = ["Projects", "Resume", "Military Experience", "Certifications"];
+const ITEMS = [
+  { name: "Projects",
+    preview: "/projects-preview.png",
+    files: [
+    {name: 'My Wedding Website', thumb:'/projects-preview.png', href:'https://christianandraakel.com'},
+    {name: 'Coffee Website', thumb:'/beans-place.png', href:'https://the-beans-place-christiankarim1264-pixels-projects.vercel.app/'},
+    {name: 'Furniture Wbsite', thumb:'/furniture-site-ss.png', href:'https://furniture-website-pldyiyxgf-christiankarim1264-pixels-projects.vercel.app/'},
+    {name: 'Barbershop Website', thumb:'/barbershop-website-ss.png', href:'https://barbershop-website-three-inky.vercel.app/'}
+  ] },
+  { name: "Resume", preview: "/resume-preview.png", files: [
+    {name: 'Resume.pdf', thumb:'/resume-preview.png', href:'/resume.pdf'}
+  ] },
+  { name: "Certifications", preview: "/react-cert-preview.png", files: [
+    {name: 'React Certificate', thumb:'/react-cert-preview.png', href:'/react-cert.pdf'},
+    {name: 'Java Script Certificate', thumb:'/javascript-cert-preview.png', href:'/javascript-cert.pdf'},
+    {name: 'MySQL Certificate', thumb:'/mysql-cert-preview.png', href:'/mysql-cert.pdf'},
+    {name: 'HTML & CSS Certificate', thumb:'/html-css-cert-preview.png', href:'/html-css-cert.pdf'}
+  ] },
+];
+
 
 const NAV = [
   { heading: "Favorites", items: ["Desktop", "Downloads", "Recent Places"] },
@@ -19,13 +40,15 @@ const FORWARD = "/windows-7/forward_normal_27px.png";
 
 
 export default function FilesWindow({ onClose }: { onClose: () => void }) {
+  const [openFolder, setOpenFolder] = useState<string | null>(null);
+  const current = ITEMS.find((item) => item.name === openFolder);
   return (
     // glass frame
     <div
       role="dialog"
       aria-label="Files"
-      className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10
-      w-[min(900px,92vw)] h-[min(600px,75dvh)] flex flex-col px-2 pb-2
+      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10
+      w-[min(900px,92cqw)] h-[min(600px,75cqh)] flex flex-col px-2 pb-2
       rounded-lg border border-[#2b4f75]/60 backdrop-blur-md text-black font-segoe
       bg-[linear-gradient(to_bottom,rgba(200,225,245,0.80),rgba(160,195,225,0.70))]
       shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6),0_10px_40px_rgba(0,0,0,0.45)]"
@@ -47,7 +70,12 @@ export default function FilesWindow({ onClose }: { onClose: () => void }) {
         {/* pill behind the buttons, with back and forward stacked on top */}
         <div className="relative w-[72px] h-[27px] shrink-0">
           <Image src={PILL} alt="" width={72} height={27} unoptimized className="absolute inset-0" />
-          <button aria-label="Back" disabled className="absolute left-0 top-0 hover:brightness-110">
+          <button
+            aria-label="Back"
+            disabled={openFolder === null}
+            onClick={() => setOpenFolder(null)}
+            className="absolute left-0 top-0 hover:brightness-110 disabled:opacity-50 disabled:hover:brightness-100"
+          >
             <Image src={BACK} alt="" width={27} height={27} unoptimized />
           </button>
           <button aria-label="Forward" disabled className="absolute left-[27px] top-0 hover:brightness-110">
@@ -56,7 +84,7 @@ export default function FilesWindow({ onClose }: { onClose: () => void }) {
         </div>
         <div className="flex-1 h-7 flex items-center gap-2 px-2 text-sm bg-white/90 border border-[#7a99bd] rounded-sm">
           <Image src={FOLDER} alt="" width={16} height={16} className="w-4 h-auto" />
-          <span>▸ Computer ▸ Files ▸</span>
+          <span>▸ Computer ▸ Files ▸ {openFolder && <>{openFolder} ▸</>}</span>
         </div>
         <div className="hidden sm:flex w-56 h-7 items-center px-2 text-sm italic text-gray-500 bg-white/90 border border-[#7a99bd] rounded-sm">
           Search Files
@@ -89,21 +117,41 @@ export default function FilesWindow({ onClose }: { onClose: () => void }) {
 
           {/* folder contents */}
           <div className="flex-1 overflow-y-auto">
-            <p className="px-4 py-2 text-lg text-[#1e395b] border-b border-[#eef2f7]">Files</p>
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-2 p-4">
-              {ITEMS.map((name) => (
-                <button
-                  key={name}
-                  className="flex flex-col items-center gap-1 p-2 text-sm rounded-sm border border-transparent
-                  hover:bg-[#e5f3fb] hover:border-[#b8d6fb] focus:bg-[#cce8ff] focus:border-[#99d1ff]"
-                >
-                  <div className='relative w-24 h-24'>
-                  <Image src={folderBack} alt="" width={64} height={64} className="w-full h-full absolute inset-0" />
-                  <Image src={folderFront} alt="" width={64} height={64} className="w-full h-full absolute inset-0" />
-                  </div>
-                  {name}
-                </button>
-              ))}
+            <p className="px-4 py-2 text-lg text-[#1e395b] border-b border-[#eef2f7]">{openFolder ?? "Files"}</p>
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-8 p-4">
+              {current ? (
+                current.files.map((file) => (
+                  <a
+                    key={file.name}
+                    href={file.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-1 p-2 text-sm text-center rounded-sm border border-transparent
+                    hover:bg-[#e5f3fb] hover:border-[#b8d6fb]"
+                  >
+                    {file.thumb && (
+                      <Image src={file.thumb} alt="" width={192} height={192} className="w-30 h-20 object-contain" />
+                    )}
+                    {file.name}
+                  </a>
+                ))
+              ) : (
+                ITEMS.map(({ name, preview }) => (
+                  <button
+                    key={name}
+                    onClick={() => setOpenFolder(name)}
+                    className="flex flex-col items-center gap-1 p-2 text-sm rounded-sm border border-transparent
+                    hover:bg-[#e5f3fb] hover:border-[#b8d6fb] focus:bg-[#cce8ff] focus:border-[#99d1ff]"
+                  >
+                    <div className='relative w-32 h-32 perspective-[300px]'>
+                      <Image src={folderBack} alt="" width={192} height={192} className="w-full h-full absolute inset-0" />
+                      {preview && (<Image src={preview} alt="" width={192} height={192} className="absolute inset-[20%] w-[60%] h-[60%] object-cover rotate-y-[-25deg] rotate-x-[-28deg] origin-left" />)}
+                      <Image src={folderFront} alt="" width={192} height={192} className="w-full h-full absolute inset-0" />
+                    </div>
+                    {name}
+                  </button>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -112,7 +160,7 @@ export default function FilesWindow({ onClose }: { onClose: () => void }) {
         <div className="h-12 flex items-center gap-3 px-4 text-sm text-[#1e395b] border-t border-[#c5d5e8]
         bg-[linear-gradient(to_bottom,#f1f5fb,#dbe6f3)]">
           <Image src={FOLDER} alt="" width={32} height={32} className="w-8 h-auto" />
-          {ITEMS.length} items
+          {current ? current.files.length : ITEMS.length} items
         </div>
       </div>
     </div>

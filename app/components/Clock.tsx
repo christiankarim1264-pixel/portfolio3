@@ -14,7 +14,7 @@ export default function Clock({ className }: { className?: string }) {
   if (!now) return null;
 
   return (
-    <div className={`text-s text-white text-center leading-tight font-segoe ${className ?? ''}`}>
+    <div className={`text-sm text-white text-center leading-tight font-segoe ${className ?? ''}`}>
       <div>{now.toLocaleTimeString('en-us', { hour: "2-digit", minute: "2-digit", second:"2-digit", hourCycle:"h23" })}</div>
       <div>{now.toLocaleDateString('en-us', {weekday:'short', month:'short', day:'numeric'}).replace(",", "")}</div>
     </div>

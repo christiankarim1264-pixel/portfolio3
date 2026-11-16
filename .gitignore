@@ -46,3 +46,33 @@ next-env.d.ts
 /skills-lock.json
 /AGENTS.md
 /CLAUDE.md
+/CHESS_BOT_HANDOFF.md
+
+# more AI tools (in case you use them later)
+/CLAUDE.local.md
+/.mcp.json
+/GEMINI.md
+/.gemini/
+/.codex/
+/.cursor/
+/.cursorrules
+/.cursorignore
+/.windsurf/
+/.windsurfrules
+/.clinerules
+/.roo/
+/.continue/
+/.aider*
+/.kiro/
+/.github/copilot-instructions.md
+
+# Windows and editor junk files
+Thumbs.db
+desktop.ini
+*.log
+.eslintcache
+/.vscode/
+/.idea/
+
+# Spline upload images (not used by the site)
+/spline-assets/

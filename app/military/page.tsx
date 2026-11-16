@@ -1,7 +1,10 @@
+import MilitaryContent from '../components/MilitaryContent';
+import { T } from '../components/contentTheme';
+
 export default function MilitaryPage() {
   return (
-    <main className='p-8'>
-      <h1 className='text-3xl font-bold'>Military Experience</h1>
+    <main className={T.page}>
+      <MilitaryContent />
     </main>
   );
 }
