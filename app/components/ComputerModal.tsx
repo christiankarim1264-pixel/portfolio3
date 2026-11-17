@@ -1,5 +1,6 @@
 'use client';
 import ComputerDesktop from './ComputerDesktop';
+import { useDialogFocus } from './useDialogFocus';
 
 // The Windows 7 desktop inside a monitor, shown over the room.
 //
@@ -13,6 +14,7 @@ import ComputerDesktop from './ComputerDesktop';
 type Props = { fromX: number; fromY: number; closing: boolean; onClose: () => void };
 
 export default function ComputerModal({ fromX, fromY, closing, onClose }: Props) {
+  const dialog = useDialogFocus<HTMLDivElement>();
   return (
     <div
       className='computer-backdrop absolute inset-0 z-20 flex items-center justify-center'
@@ -20,7 +22,12 @@ export default function ComputerModal({ fromX, fromY, closing, onClose }: Props)
       onClick={onClose}
     >
       <div
-        className='monitor-zoom relative flex w-(--mw) flex-col items-center'
+        ref={dialog}
+        tabIndex={-1}
+        role='dialog'
+        aria-modal='true'
+        aria-label='Computer: projects and certificates'
+        className='monitor-zoom relative outline-none flex w-(--mw) flex-col items-center'
         data-closing={closing || undefined}
         style={{
           '--mw': 'min(1400px, 94vw, 132dvh)', // monitor width: fits wide AND short screens; stand sizes use it too

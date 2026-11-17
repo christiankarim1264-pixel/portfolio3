@@ -2,6 +2,7 @@
 import AboutContent from './AboutContent';
 import MilitaryContent from './MilitaryContent';
 import { T } from './contentTheme';
+import { useDialogFocus } from './useDialogFocus';
 
 // The About / Military pages, shown as a popup over the room.
 // The content is the same component the standalone pages use; this file only adds the frame:
@@ -16,6 +17,7 @@ type Props = {
 };
 
 export default function ContentModal({ page, onClose, onSwitch }: Props) {
+  const dialog = useDialogFocus<HTMLDivElement>();
   return (
     <div
       className='content-backdrop absolute inset-0 z-20 flex items-center justify-center bg-black/60 p-3 sm:p-6'
@@ -23,10 +25,12 @@ export default function ContentModal({ page, onClose, onSwitch }: Props) {
     >
       {/* the panel: doesn't scroll itself (so the close button stays put); the inner div scrolls */}
       <div
+        ref={dialog}
+        tabIndex={-1}
         role='dialog'
         aria-modal='true'
         aria-label={page === 'about' ? 'About me' : 'Military'}
-        className={`content-panel relative h-full max-h-[min(900px,94dvh)] w-[min(820px,100%)] overflow-hidden rounded-xl
+        className={`content-panel relative outline-none h-full max-h-[min(900px,94dvh)] w-[min(820px,100%)] overflow-hidden rounded-xl
           border border-[#262b34] shadow-[0_30px_80px_rgb(0_0_0/0.7)] ${T.bg}`}
         onClick={(e) => e.stopPropagation()}
       >

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import "7.css/dist/7.scoped.css";
+import { useDialogFocus } from "./useDialogFocus";
 
 // placeholder folders: rename these to whatever you want visitors to find
 const ITEMS = [
@@ -9,8 +10,8 @@ const ITEMS = [
     preview: "/projects-preview.png",
     files: [
     {name: 'My Wedding Website', thumb:'/projects-preview.png', href:'https://christianandraakel.com'},
-    {name: 'Coffee Website', thumb:'/beans-place.png', href:'https://the-beans-place-christiankarim1264-pixels-projects.vercel.app/'},
-    {name: 'Furniture Wbsite', thumb:'/furniture-site-ss.png', href:'https://furniture-website-pldyiyxgf-christiankarim1264-pixels-projects.vercel.app/'},
+    {name: 'Coffee Website', thumb:'/beans-place.png', href:'https://the-beans-place-two.vercel.app/'},
+    {name: 'Furniture Website', thumb:'/furniture-site-ss.png', href:'https://furniture-website-plum-psi.vercel.app/'},
     {name: 'Barbershop Website', thumb:'/barbershop-website-ss.png', href:'https://barbershop-website-three-inky.vercel.app/'}
   ] },
   { name: "Resume", preview: "/resume-preview.png", files: [
@@ -18,7 +19,7 @@ const ITEMS = [
   ] },
   { name: "Certifications", preview: "/react-cert-preview.png", files: [
     {name: 'React Certificate', thumb:'/react-cert-preview.png', href:'/react-cert.pdf'},
-    {name: 'Java Script Certificate', thumb:'/javascript-cert-preview.png', href:'/javascript-cert.pdf'},
+    {name: 'JavaScript Certificate', thumb:'/javascript-cert-preview.png', href:'/javascript-cert.pdf'},
     {name: 'MySQL Certificate', thumb:'/mysql-cert-preview.png', href:'/mysql-cert.pdf'},
     {name: 'HTML & CSS Certificate', thumb:'/html-css-cert-preview.png', href:'/html-css-cert.pdf'}
   ] },
@@ -42,12 +43,15 @@ const FORWARD = "/windows-7/forward_normal_27px.png";
 export default function FilesWindow({ onClose }: { onClose: () => void }) {
   const [openFolder, setOpenFolder] = useState<string | null>(null);
   const current = ITEMS.find((item) => item.name === openFolder);
+  const dialog = useDialogFocus<HTMLDivElement>();
   return (
     // glass frame
     <div
+      ref={dialog}
+      tabIndex={-1}
       role="dialog"
       aria-label="Files"
-      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10
+      className="outline-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10
       w-[min(900px,92cqw)] h-[min(600px,75cqh)] flex flex-col px-2 pb-2
       rounded-lg border border-[#2b4f75]/60 backdrop-blur-md text-black font-segoe
       bg-[linear-gradient(to_bottom,rgba(200,225,245,0.80),rgba(160,195,225,0.70))]

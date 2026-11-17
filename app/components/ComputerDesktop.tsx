@@ -5,7 +5,7 @@ import Banner from "./Banner";
 import FilesWindow from "./FilesWindow";
 import { useState } from "react";
 
-// The Windows 7 desktop. It fills whatever box you put it in (the /computer page or the monitor modal),
+// The Windows 7 desktop. It fills whatever box you put it in (here: the monitor modal),
 // so sizes use container units (cqw/cqh = % of THIS box) instead of vw/dvh (% of the browser window).
 export default function ComputerDesktop() {
   const [filesOpen, setFilesOpen] = useState(false);
@@ -16,7 +16,8 @@ export default function ComputerDesktop() {
       <Image
         src={"/windows-7/windows-7-official-3840x2160.jpg"}
         fill
-        alt="doors 7 background"
+        sizes="(max-width: 1400px) 94vw, 1400px"
+        alt=""
         className="object-cover -z-10"
       />
       {/* apps */}
@@ -26,10 +27,10 @@ export default function ComputerDesktop() {
         <div className='flex flex-col mx-4 my-3 items-center w-15 text-center leading-tight'>
         <Image
             src={"/windows-7/windows7-recycle.png"}
-            alt="doors 7 files button"
+            alt=""
             width="100"
             height="100"
-            className="cursor-pointer my-1 h-auto w-[60px]"
+            className="my-1 h-auto w-[60px]"
           />
 
           <p className='font-segoe text-shadow-sm text-shadow-black'>Recycle Bin</p>
@@ -40,7 +41,7 @@ export default function ComputerDesktop() {
           onClick={() => setFilesOpen((open) => !open)}>
             <Image
             src={"/windows-7/windows7-files-logo.png"}
-            alt="doors 7 files button"
+            alt=""
             width="100"
             height="100"
             className="cursor-pointer my-1 h-auto w-[60px]"
@@ -79,27 +80,34 @@ export default function ComputerDesktop() {
         <div className="z-1 h-full flex items-center">
           <Image
             src={"/windows-7/windows7-start-orb.png"}
-            alt="doors 7 start button"
+            alt=""
             width="100"
             height="100"
-            className="cursor-pointer mr-4 mb-2 h-14/9 w-auto"
+            className="mr-4 mb-2 h-14/9 w-auto"
           />
 
-          <Image
-            src={"/windows-7/windows7-files-logo.png"}
-            alt="doors 7 files button"
-            width="100"
-            height="100"
-            className="cursor-pointer my-1 h-3/4 w-auto mx-4"
+          {/* a real button (not a clickable picture), so keyboard users can open it too */}
+          <button
+            type="button"
+            aria-label="Files"
             onClick={() => setFilesOpen((open) => !open)}
-          />
+            className="h-3/4 mx-4 my-1 cursor-pointer"
+          >
+            <Image
+              src={"/windows-7/windows7-files-logo.png"}
+              alt=""
+              width="100"
+              height="100"
+              className="h-full w-auto"
+            />
+          </button>
 
           <Image
             src={"/windows-7/windows7-internet-explorer-logo.png"}
-            alt="doors 7 files button"
+            alt=""
             width="100"
             height="100"
-            className="cursor-pointer my-1 h-3/4 w-auto mx-6"
+            className="my-1 h-3/4 w-auto mx-6"
           />
 
         </div>

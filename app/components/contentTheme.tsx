@@ -1,8 +1,6 @@
 // Shared look for the About and Military content, matched to the room:
 //   dark room, warm desk-lamp light (#ffd9a6), cool monitor light (#8fb6ff), maroon curtains.
-// Change a color here and both pages update.
-
-import Link from 'next/link';
+// Change a color here and both popups update.
 
 // background: dark room, warm lamp glow top-left, cool monitor glow top-right
 const BG =
@@ -10,7 +8,6 @@ const BG =
 
 export const T = {
   bg: BG,                                  // the modal panel uses this
-  page: `min-h-dvh bg-fixed ${BG}`,        // the standalone pages use this
   article: 'mx-auto max-w-2xl px-6 py-14 font-sans sm:py-20',
 
   eyebrow: 'text-sm font-semibold uppercase tracking-[0.18em] text-[#e8b98a]',
@@ -43,11 +40,8 @@ export function Facts({ items }: { items: { label: string; value: string }[] }) 
   );
 }
 
-// A link to the other content page. On the standalone pages it's a normal link (href).
-// Inside a modal, `onClick` is given instead, so it swaps modals and the visitor stays in the room.
-export function CrossLink({ href, onClick, children }: { href: string; onClick?: () => void; children: React.ReactNode }) {
-  if (onClick) {
-    return <button type='button' onClick={onClick} className={T.link}>{children}</button>;
-  }
-  return <Link href={href} className={T.link}>{children}</Link>;
+// The link at the bottom of each popup that swaps to the other one (About <-> Military),
+// so the visitor stays in the room.
+export function CrossLink({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return <button type='button' onClick={onClick} className={T.link}>{children}</button>;
 }

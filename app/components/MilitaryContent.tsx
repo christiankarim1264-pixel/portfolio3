@@ -1,14 +1,13 @@
 import { CrossLink, Facts, T } from './contentTheme';
 
-// The "Military" content. Same idea as AboutContent:
-//   used by app/military/page.tsx now, and by a modal over the room later.
-// No background or height here; the wrapper decides those (T.page).
+// The "Military" content, shown in a popup over the room (ContentModal.tsx).
+// No background or height here; the popup decides those.
 // Colors live in contentTheme.tsx. To change the words, edit the lists below.
 
 const FACTS = [
   { label: 'Rank', value: 'Sergeant' },
   { label: 'MOS', value: '7257 Air Traffic Controller' },
-  { label: 'Duty station', value: 'Yuma, Arizona' },
+  { label: 'Duty station', value: 'MCAS Yuma, AZ' },
 ];
 
 // The path from civilian to controller, in order
@@ -47,7 +46,7 @@ const SKILLS = [
   },
   {
     title: 'Strict adherence to rules and regulations',
-    text: 'As a marine and especially as an air traffic controller, strict adherence to rules and regulations is a requirement. I  utilized multiple publications and needed tangible justification via publications for every action I made on the job.',
+    text: 'As a Marine and especially as an air traffic controller, strict adherence to rules and regulations is a requirement. I utilized multiple publications and needed tangible justification via publications for every action I made on the job.',
   },
   {
     title: 'Attention to detail',
@@ -61,8 +60,8 @@ const SKILLS = [
 
 const AWARDS = ['National Defense Service Medal', 'Good Conduct Medal'];
 
-// onSwitch: given when shown in a modal; the About link then swaps modals instead of leaving the room
-export default function MilitaryContent({ onSwitch }: { onSwitch?: () => void }) {
+// onSwitch: the About link at the bottom swaps the popup to About
+export default function MilitaryContent({ onSwitch }: { onSwitch: () => void }) {
   return (
     <article className={T.article}>
       {/* ---------- intro ---------- */}
@@ -119,7 +118,7 @@ export default function MilitaryContent({ onSwitch }: { onSwitch?: () => void })
         </section>
 
         <p>
-          <CrossLink href='/about' onClick={onSwitch}>← Where I come from</CrossLink>
+          <CrossLink onClick={onSwitch}>← Where I come from</CrossLink>
         </p>
       </div>
     </article>

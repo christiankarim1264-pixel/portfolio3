@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 // screen-reader users) to every modal without hunting for objects in the room.
 // It only says WHICH section to open; Room.tsx does the opening (same code the 3D clicks use).
 
-export type MenuSection = 'frame' | 'ohio' | 'military' | 'computer' | 'chess';
+export type MenuSection = 'frame' | 'ohio' | 'military' | 'computer' | 'chess' | 'contact';
 
 const ITEMS: { section: MenuSection; title: string; detail: string }[] = [
   { section: 'frame', title: 'Resume', detail: 'Skills, projects and experience' },
@@ -15,9 +15,9 @@ const ITEMS: { section: MenuSection; title: string; detail: string }[] = [
   { section: 'chess', title: 'Play chess', detail: 'Can you beat the bot that plays like me?' },
 ];
 
+const EMAIL = 'christiankarim1264@gmail.com';
+
 const LINKS = [
-  // PLACEHOLDER: put your real email after "mailto:" (e.g. 'mailto:name@example.com')
-  { label: 'Contact me', href: 'mailto:you@example.com' },
   { label: 'GitHub', href: 'https://github.com/christiankarim1264-pixel' },
   { label: 'LinkedIn', href: 'https://linkedin.com/in/christian-karim-8a0b8a3b8' },
 ];
@@ -25,6 +25,24 @@ const LINKS = [
 export default function SiteMenu({ onOpen }: { onOpen: (section: MenuSection) => void }) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
+
+  // "Contact me" only works if the visitor has an email app set up, so this copies the address instead
+  const copyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(EMAIL);
+    } catch {
+      // older browsers / blocked clipboard: copy the old-fashioned way
+      const box = document.createElement('textarea');
+      box.value = EMAIL;
+      document.body.appendChild(box);
+      box.select();
+      document.execCommand('copy');
+      box.remove();
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   // close on Escape or on a click anywhere outside the menu
   useEffect(() => {
@@ -69,7 +87,7 @@ export default function SiteMenu({ onOpen }: { onOpen: (section: MenuSection) =>
         >
           <div className='border-b border-[#262b34] px-5 py-4'>
             <p className='font-semibold text-[#f3ece1]'>Christian Karim</p>
-            <p className='mt-0.5 text-sm text-[#8b857c]'>Software Engineer · U.S. Marine Corps Veteran</p>
+            <p className='mt-0.5 text-sm text-[#8b857c]'>Full-Stack Software Engineer · U.S. Marine Corps Veteran</p>
           </div>
 
           <ul className='p-2'>
@@ -91,17 +109,39 @@ export default function SiteMenu({ onOpen }: { onOpen: (section: MenuSection) =>
           </ul>
 
           <div className='flex flex-wrap gap-x-5 gap-y-2 border-t border-[#262b34] px-5 py-3.5 text-sm'>
+            {/* opens the contact form (ContactModal.tsx) instead of the visitor's email app */}
+            <button
+              type='button'
+              onClick={() => { setOpen(false); onOpen('contact'); }}
+              className='font-semibold text-[#ffd9a6] underline decoration-[#ffd9a6]/40 underline-offset-4 hover:decoration-[#ffd9a6]'
+            >
+              Contact me
+            </button>
             {LINKS.map((l) => (
               <a
                 key={l.label}
                 href={l.href}
-                // email links open the mail app; web links open in a new tab
-                {...(l.href.startsWith('mailto:') ? {} : { target: '_blank', rel: 'noreferrer' })}
+                target='_blank'
+                rel='noreferrer'
                 className='font-semibold text-[#ffd9a6] underline decoration-[#ffd9a6]/40 underline-offset-4 hover:decoration-[#ffd9a6]'
               >
                 {l.label}
               </a>
             ))}
+          </div>
+
+          {/* the email as plain text plus a copy button: works on every computer */}
+          <div className='flex items-center justify-between gap-3 border-t border-[#262b34] px-5 py-3 text-sm'>
+            <span className='truncate text-[#8b857c] select-all'>{EMAIL}</span>
+            {/* aria-live: screen readers announce "Copied!" when the text changes */}
+            <button
+              type='button'
+              onClick={copyEmail}
+              aria-live='polite'
+              className='shrink-0 rounded-md px-2.5 py-1 font-semibold text-[#f3ece1] ring-1 ring-[#2a2f38] transition-colors hover:bg-[#1c212a]'
+            >
+              {copied ? 'Copied!' : 'Copy email'}
+            </button>
           </div>
         </nav>
       )}

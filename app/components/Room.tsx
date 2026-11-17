@@ -5,8 +5,10 @@ import type { Application } from '@splinetool/runtime';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ChessGame from './ChessGame';
 import ComputerModal from './ComputerModal';
+import ContactModal from './ContactModal';
 import ContentModal, { type ContentPage } from './ContentModal';
 import SiteMenu, { type MenuSection } from './SiteMenu';
+import { useDialogFocus } from './useDialogFocus';
 
 
 const SCENE_URL = 'https://prod.spline.design/kjrBhZa1G3SP0mmG/scene.splinecode';
@@ -38,8 +40,10 @@ type ComputerState = { x: number; y: number; closing: boolean };
 export default function Room() {
   const [loaded, setLoaded] = useState(false);
   const [ready, setReady] = useState(false);
+  const [slow, setSlow] = useState(false); // the room hasn't loaded after a while (slow connection / old computer)
   const [resumeOpen, setResumeOpen] = useState(false);
   const [chessOpen, setChessOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
   const [computer, setComputer] = useState<ComputerState | null>(null);
   const [content, setContent] = useState<ContentPage | null>(null); // About / Military modal
   // where the last click/tap in the room happened (the monitor, when the computer opens)
@@ -63,6 +67,7 @@ export default function Room() {
   const openSection = useCallback((section: string, from?: { x: number; y: number } | null) => {
     if (section === 'chess') { setChessOpen(true); return; }
     if (section === 'frame') { setResumeOpen(true); return; }
+    if (section === 'contact') { setContactOpen(true); return; }
     if (section === 'computer') {
       const p = from ?? { x: window.innerWidth / 2, y: window.innerHeight / 2 };
       setComputer({ ...p, closing: false });
@@ -78,6 +83,7 @@ export default function Room() {
   const openFromMenu = useCallback((section: MenuSection) => {
     setResumeOpen(false);
     setChessOpen(false);
+    setContactOpen(false);
     setContent(null);
     setComputer(null);
     openSection(section);
@@ -147,12 +153,19 @@ export default function Room() {
     };
   }, [openSection]);
 
+  // If the room still isn't showing after 20 s, tell the visitor the menu works without it
+  useEffect(() => {
+    const timer = setTimeout(() => setSlow(true), 20000);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Escape closes whichever modal is open
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       setResumeOpen(false);
       setChessOpen(false);
+      setContactOpen(false);
       setContent(null);
       closeComputer();
     };
@@ -164,7 +177,7 @@ export default function Room() {
   const zoomed = !!computer && !computer.closing;
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-black">
+    <div className="relative h-dvh w-full overflow-hidden bg-black">
       {/* the room; scales up toward the monitor while the computer is open */}
       <div
         className="room-zoom absolute inset-0"
@@ -182,32 +195,61 @@ export default function Room() {
           />
         )}
         {chessOpen && <ChessGame onClose={() => setChessOpen(false)} />}
+        {contactOpen && <ContactModal onClose={() => setContactOpen(false)} />}
         {content && <ContentModal page={content} onClose={() => setContent(null)} onSwitch={setContent} />}
-        {resumeOpen &&
-        <div className='absolute inset-0 bg-black/60 flex items-center justify-center'
-        onClick={() => setResumeOpen(false)}>
-          <div className='relative w-[min(850px,92vw)] h-[90dvh] bg-white'
-          onClick={(e) => e.stopPropagation()}>
-        <iframe src="/resume.pdf" title="Resume" className="w-full h-full"
-         />
-          {/* close button, pinned to the top-right corner of the box */}
-          <button
-            aria-label="Close resume"
-            onClick={() => setResumeOpen(false)}
-            className='absolute top-14 right-8 w-8 h-8 rounded-full bg-black/70 text-white text-xl leading-none hover:bg-black'
-          >
-            ×
-          </button>
-         </div></div>
-        }
+        {resumeOpen && <ResumeModal onClose={() => setResumeOpen(false)} />}
       {!showRoom && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black text-white">
-          Loading…
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black px-6 text-center text-white">
+          <p>Loading…</p>
+          {slow && (
+            <p className="max-w-sm text-sm text-white/70">
+              The 3D room is taking a while to load. You can still open everything from the Menu in the top-left corner.
+            </p>
+          )}
         </div>
       )}
       {/* on top of everything, even the loading screen: a recruiter can open the resume right away */}
       <SiteMenu onOpen={openFromMenu} />
 
+    </div>
+  );
+}
+
+// The resume, shown as a popup over the room.
+// Phone browsers often can't show a PDF inside a page (blank box, or only page 1),
+// so there's also a button that opens it in its own tab, where every browser can show it.
+function ResumeModal({ onClose }: { onClose: () => void }) {
+  const dialog = useDialogFocus<HTMLDivElement>();
+  return (
+    <div className='absolute inset-0 z-20 flex items-center justify-center bg-black/60' onClick={onClose}>
+      <div
+        ref={dialog}
+        tabIndex={-1}
+        role='dialog'
+        aria-modal='true'
+        aria-label='Resume'
+        className='relative h-[90dvh] w-[min(850px,92vw)] bg-white outline-none'
+        onClick={(e) => e.stopPropagation()}
+      >
+        <iframe src='/resume.pdf' title='Resume' className='h-full w-full' />
+        {/* close button, pinned to the top-right corner of the box */}
+        <button
+          aria-label='Close resume'
+          onClick={onClose}
+          className='absolute right-8 top-14 h-8 w-8 rounded-full bg-black/70 text-xl leading-none text-white hover:bg-black'
+        >
+          ×
+        </button>
+        {/* backup for phones: open the PDF in its own tab */}
+        <a
+          href='/resume.pdf'
+          target='_blank'
+          rel='noreferrer'
+          className='absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/80 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:bg-black'
+        >
+          Open PDF in a new tab
+        </a>
+      </div>
     </div>
   );
 }

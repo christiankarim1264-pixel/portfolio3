@@ -6,6 +6,7 @@ import { Chess } from 'chess.js';
 import { Chessboard, type PieceDropHandlerArgs, type PieceHandlerArgs } from 'react-chessboard';
 import { getBotMove, preloadBot } from '../lib/chess-bot/bot';
 import { ChessComLogo, UsChessLogo } from './ChessLogos';
+import { useDialogFocus } from './useDialogFocus';
 
 // Which frame to show: true = CSS wood (globals.css), false = the PNG image
 const USE_CSS_FRAME = true;
@@ -30,6 +31,7 @@ export default function ChessGame({ onClose }: { onClose: () => void }) {
   // Goes up by 1 on every new game and when the modal closes. A bot move that finishes
   // "thinking" after that belongs to an old game, so it gets thrown away.
   const gameId = useRef(0);
+  const dialog = useDialogFocus<HTMLDivElement>();
 
   useEffect(() => {
     preloadBot(); // start downloading the model + book as soon as the modal opens
@@ -150,7 +152,8 @@ export default function ChessGame({ onClose }: { onClose: () => void }) {
   return (
     <div className='absolute inset-0 bg-black/60 flex items-center justify-center'
         onClick={() => onClose()}>
-          <div className='relative w-[min(740px,92vw)] drop-shadow-2xl'
+          <div ref={dialog} tabIndex={-1} role='dialog' aria-modal='true' aria-label='Play chess against my bot'
+          className='relative w-[min(740px,92vw)] drop-shadow-2xl outline-none'
           onClick={(e) => e.stopPropagation()}>
         <div className='relative'>
           {USE_CSS_FRAME ? (
@@ -185,8 +188,8 @@ export default function ChessGame({ onClose }: { onClose: () => void }) {
                   </div>
                     <div className='mt-4'>Check out my chess.com account and uscf rating here!</div>
                     <div className='flex items-center gap-6'>
-                    <a href='https://www.chess.com/member/youngfroo' target='blank'><ChessComLogo className='h-12 w-auto' /></a>
-                    <a href='https://ratings.uschess.org/player/32669108' target='blank'><UsChessLogo className='h-12 w-auto' /></a>
+                    <a href='https://www.chess.com/member/youngfroo' target='_blank' rel='noreferrer' aria-label='My Chess.com profile'><ChessComLogo className='h-12 w-auto' /></a>
+                    <a href='https://ratings.uschess.org/player/32669108' target='_blank' rel='noreferrer' aria-label='My US Chess rating'><UsChessLogo className='h-12 w-auto' /></a>
                     </div>
                 </>
               ) : (
