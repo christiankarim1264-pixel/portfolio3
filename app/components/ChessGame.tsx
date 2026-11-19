@@ -146,14 +146,16 @@ export default function ChessGame({ onClose }: { onClose: () => void }) {
   );
 
   const buttonClass =
-    'rounded-md bg-[#f0d9b5] px-4 py-2 font-semibold text-[#3d220f] shadow hover:bg-white transition-colors';
+    // sized by the POPUP's width (container queries, see the dialog below): small board = small buttons,
+    // @lg (board 512px+) = the original size, @3xl (board 768px+, computers) = 1.5x
+    'rounded-md bg-[#f0d9b5] px-3 py-1.5 text-sm @lg:px-4 @lg:py-2 @lg:text-base @3xl:rounded-lg @3xl:px-6 @3xl:py-3 @3xl:text-2xl font-semibold text-[#3d220f] shadow hover:bg-white transition-colors';
 
   // ④ RETURN: only JSX (what shows on screen)
   return (
     <div className='absolute inset-0 bg-black/60 flex items-center justify-center'
         onClick={() => onClose()}>
           <div ref={dialog} tabIndex={-1} role='dialog' aria-modal='true' aria-label='Play chess against my bot'
-          className='relative w-[min(740px,92vw)] drop-shadow-2xl outline-none'
+          className='@container relative w-[min(1200px,92vw,calc(92dvh-3rem))] drop-shadow-2xl outline-none'
           onClick={(e) => e.stopPropagation()}>
         <div className='relative'>
           {USE_CSS_FRAME ? (
@@ -174,27 +176,31 @@ export default function ChessGame({ onClose }: { onClose: () => void }) {
 
           {/* before a game: pick a color.  after a game: play again */}
           {(!player || over) && (
-            <div className='absolute inset-0 z-5 flex flex-col items-center justify-center gap-4 bg-black/55 text-white'>
+            // sized by how wide the POPUP is, not the browser window (a phone held sideways has a wide window but a small board):
+            // plain classes = board under 512px (phones), @lg: = 512px+ (tablets, the original sizes), @3xl: = 768px+ (computers, 1.5x)
+            // justify-center-safe centers the content, but lines it up at the top if it's too tall (so overflow-y-auto can reach all of it)
+            <div className='absolute inset-0 z-5 flex flex-col items-center justify-center-safe gap-2 @lg:gap-4 @3xl:gap-6 overflow-y-auto px-3 py-3 bg-black/55 text-white'>
               {!player ? (
                 <>
-                  <p className='text-2xl font-bold'>Can you beat me?</p>
-                  <p className='max-w-sm text-center text-sm text-white/80'>
+                  <p className='text-xl @lg:text-2xl @3xl:text-4xl font-bold'>Can you beat me?</p>
+                  {/* the least important line, so phones skip it */}
+                  <p className='hidden @lg:block max-w-sm @3xl:max-w-xl text-center text-sm @3xl:text-xl text-white/80'>
                     This bot was programmed in Maia Chess to play my openings at my strength.
                   </p>
-                  <div className='flex gap-3'>
+                  <div className='flex gap-2 @lg:gap-3 @3xl:gap-4'>
                     <button className={buttonClass} onClick={() => startGame('white')}>Play white</button>
                     <button className={buttonClass} onClick={() => startGame('random')}>Random</button>
                     <button className={buttonClass} onClick={() => startGame('black')}>Play black</button>
                   </div>
-                    <div className='mt-4'>Check out my chess.com account and uscf rating here!</div>
-                    <div className='flex items-center gap-6'>
-                    <a href='https://www.chess.com/member/youngfroo' target='_blank' rel='noreferrer' aria-label='My Chess.com profile'><ChessComLogo className='h-12 w-auto' /></a>
-                    <a href='https://ratings.uschess.org/player/32669108' target='_blank' rel='noreferrer' aria-label='My US Chess rating'><UsChessLogo className='h-12 w-auto' /></a>
+                    <div className='mt-1 @lg:mt-4 @3xl:mt-6 text-center text-sm @lg:text-base @3xl:text-2xl'>Check out my chess.com account and USCF rating here!</div>
+                    <div className='flex items-center gap-4 @lg:gap-6 @3xl:gap-9'>
+                    <a href='https://www.chess.com/member/youngfroo' target='_blank' rel='noreferrer' aria-label='My Chess.com profile'><ChessComLogo className='h-8 @lg:h-12 @3xl:h-18 w-auto' /></a>
+                    <a href='https://ratings.uschess.org/player/32669108' target='_blank' rel='noreferrer' aria-label='My US Chess rating'><UsChessLogo className='h-8 @lg:h-12 @3xl:h-18 w-auto' /></a>
                     </div>
                 </>
               ) : (
                 <>
-                  <p className='text-2xl font-bold'>{status}</p>
+                  <p className='text-center text-xl @lg:text-2xl @3xl:text-4xl font-bold'>{status}</p>
                   <button className={buttonClass} onClick={() => setPlayer(null)}>Play again</button>
                 </>
               )}
@@ -219,13 +225,26 @@ export default function ChessGame({ onClose }: { onClose: () => void }) {
           </div>
         )}
 
+        {/* close button, styled like the other popups' close buttons.
+            phones/tablets (below lg): 44px so it's easy to tap, and placed OUTSIDE the popup so it never covers the board:
+              upright -> above the popup's top-right corner, sideways -> to the right of it (that's where the free space is).
+            computers (lg+): centered on the wooden frame's top-right corner. The frame is 7% of the popup's width, so the
+              button is 5.5% of it (never under 32px): it grows with the board and always fits inside the wood */}
         <button
-            aria-label="Close chess"
-            onClick={() => onClose()}
-            className='absolute top-4 right-4 z-10 w-6 h-6 rounded-full bg-black/70 text-white text-xl leading-none hover:bg-black'
-          >
-            ×
-          </button>
+          type='button'
+          aria-label='Close chess'
+          onClick={() => onClose()}
+          className='absolute z-10 grid size-11 place-items-center rounded-full bg-[#151920]/90 text-[#f3ece1] ring-1 ring-[#2a2f38]
+            shadow-[0_6px_18px_rgb(0_0_0/0.5)] transition-colors hover:bg-[#232832]
+            max-lg:portrait:bottom-full max-lg:portrait:right-0 max-lg:portrait:mb-2
+            max-lg:landscape:top-0 max-lg:landscape:left-full max-lg:landscape:ml-2
+            lg:top-[3.5%] lg:right-[3.5%] lg:h-auto lg:w-[5.5%] lg:min-w-8 lg:aspect-square lg:translate-x-1/2 lg:-translate-y-1/2'
+        >
+          {/* an SVG × instead of the text character, so it sits exactly in the middle */}
+          <svg viewBox='0 0 24 24' aria-hidden className='size-1/2' fill='none' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round'>
+            <path d='M6 6l12 12M18 6L6 18' />
+          </svg>
+        </button>
       </div>
     </div>
   );

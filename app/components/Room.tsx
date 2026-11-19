@@ -177,7 +177,7 @@ export default function Room() {
   const zoomed = !!computer && !computer.closing;
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden bg-black">
+    <div className="relative h-lvh w-full overflow-hidden bg-black">
       {/* the room; scales up toward the monitor while the computer is open */}
       <div
         className="room-zoom absolute inset-0"

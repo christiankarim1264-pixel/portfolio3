@@ -81,7 +81,10 @@ export default function SiteMenu({ onOpen }: { onOpen: (section: MenuSection) =>
         <nav
           id='site-menu'
           aria-label='Site'
-          className='mt-2 w-[min(340px,calc(100vw-2rem))] overflow-hidden rounded-xl bg-[#11151b]/95 ring-1 ring-[#262b34]
+          // max-h + overflow-y-auto: on short screens (a phone held sideways) the menu scrolls instead of running off the bottom.
+          // 5.5rem = the gap above the button + the button + the gap below it + a little room at the bottom of the screen.
+          // overscroll-contain: reaching the end of the menu doesn't start scrolling the page behind it.
+          className='mt-2 max-h-[calc(100dvh-5.5rem)] w-[min(340px,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-xl bg-[#11151b]/95 ring-1 ring-[#262b34]
             shadow-[0_24px_60px_rgb(0_0_0/0.6)] backdrop-blur transition-[opacity,transform] duration-200
             starting:-translate-y-1 starting:opacity-0'
         >

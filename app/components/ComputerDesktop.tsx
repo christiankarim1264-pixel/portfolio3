@@ -7,6 +7,14 @@ import { useState } from "react";
 
 // The Windows 7 desktop. It fills whatever box you put it in (here: the monitor modal),
 // so sizes use container units (cqw/cqh = % of THIS box) instead of vw/dvh (% of the browser window).
+//
+// SMALL SCREENS (PC first): the plain classes are the computer sizes. The @max- classes shrink things when the
+// MONITOR'S SCREEN is small. They're container queries, so they look at this desktop box (it's a container, see
+// [container-type:size] below), not at the browser window, which also covers a phone held sideways.
+//   @max-3xl: = screen under 768px wide (tablets, small windows)  -> medium sizes
+//   @max-xl:  = screen under 576px wide (phones)                   -> small sizes
+//   (576, not 512: on a sideways iPhone the screen is ~470px with Safari's bar showing and ~550px with it hidden,
+//    so the line has to sit above both or the sizes jump when the bar hides)
 export default function ComputerDesktop() {
   const [filesOpen, setFilesOpen] = useState(false);
   return (
@@ -24,30 +32,32 @@ export default function ComputerDesktop() {
 
       <div className='flex flex-col'>
 {/* reycle bin */}
-        <div className='flex flex-col mx-4 my-3 items-center w-15 text-center leading-tight'>
+        <div className='flex flex-col mx-4 my-3 items-center w-15 text-center leading-tight
+        @max-3xl:mx-3 @max-3xl:my-2 @max-3xl:w-11 @max-xl:mx-2 @max-xl:my-1.5 @max-xl:w-8'>
         <Image
             src={"/windows-7/windows7-recycle.png"}
             alt=""
             width="100"
             height="100"
-            className="my-1 h-auto w-[60px]"
+            className="my-1 h-auto w-[60px] @max-3xl:w-11 @max-xl:my-0.5 @max-xl:w-8"
           />
 
-          <p className='font-segoe text-shadow-sm text-shadow-black'>Recycle Bin</p>
+          <p className='font-segoe text-shadow-sm text-shadow-black @max-3xl:text-xs @max-xl:text-[9px]'>Recycle Bin</p>
 
           </div>
 
-          <button className='flex flex-col mx-4 my-3 items-center w-15 text-center leading-tight'
+          <button className='flex flex-col mx-4 my-3 items-center w-15 text-center leading-tight
+          @max-3xl:mx-3 @max-3xl:my-2 @max-3xl:w-11 @max-xl:mx-2 @max-xl:my-1.5 @max-xl:w-8'
           onClick={() => setFilesOpen((open) => !open)}>
             <Image
             src={"/windows-7/windows7-files-logo.png"}
             alt=""
             width="100"
             height="100"
-            className="cursor-pointer my-1 h-auto w-[60px]"
+            className="cursor-pointer my-1 h-auto w-[60px] @max-3xl:w-11 @max-xl:my-0.5 @max-xl:w-8"
           />
 
-          <p className='font-segoe text-shadow-sm text-shadow-black'>Files</p>
+          <p className='font-segoe text-shadow-sm text-shadow-black @max-3xl:text-xs @max-xl:text-[9px]'>Files</p>
 
           </button>
 
@@ -70,7 +80,7 @@ export default function ComputerDesktop() {
       </div>
 
       {/* taskbar */}
-      <div className="absolute bottom-0 z-20 bg-[#2a5f95]/30 h-[clamp(30px,6cqh,80px)]
+      <div className="absolute bottom-0 z-20 bg-[#2a5f95]/30 h-[clamp(30px,6cqh,80px)] @max-xl:h-6
       
       bg-[linear-gradient(to_bottom,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0.04)_50%,rgba(0,20,50,0.30)_100%)]
 
@@ -83,7 +93,7 @@ export default function ComputerDesktop() {
             alt=""
             width="100"
             height="100"
-            className="mr-4 mb-2 h-14/9 w-auto"
+            className="mr-4 mb-2 h-14/9 w-auto @max-3xl:mr-3 @max-xl:mr-2 @max-xl:mb-1"
           />
 
           {/* a real button (not a clickable picture), so keyboard users can open it too */}
@@ -91,7 +101,7 @@ export default function ComputerDesktop() {
             type="button"
             aria-label="Files"
             onClick={() => setFilesOpen((open) => !open)}
-            className="h-3/4 mx-4 my-1 cursor-pointer"
+            className="h-3/4 mx-4 my-1 cursor-pointer @max-3xl:mx-3 @max-xl:mx-2"
           >
             <Image
               src={"/windows-7/windows7-files-logo.png"}
@@ -107,14 +117,14 @@ export default function ComputerDesktop() {
             alt=""
             width="100"
             height="100"
-            className="my-1 h-3/4 w-auto mx-6"
+            className="my-1 h-3/4 w-auto mx-6 @max-3xl:mx-4 @max-xl:mx-2"
           />
 
         </div>
         {/* battery sound etc */}
         <div className='flex h-full items-center'>
 
-          <svg className='mx-4 w-[22px]'
+          <svg className='mx-4 w-[22px] @max-3xl:mx-3 @max-3xl:w-[18px] @max-xl:mx-1.5 @max-xl:w-3'
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 32 32"
             width="32"
@@ -157,7 +167,7 @@ export default function ComputerDesktop() {
             </g>
           </svg>
 
-          <svg className='mx-2 w-[22px]'
+          <svg className='mx-2 w-[22px] @max-3xl:w-[18px] @max-xl:mx-1 @max-xl:w-3'
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 32 32"
             width="32"
@@ -228,7 +238,7 @@ export default function ComputerDesktop() {
             </g>
           </svg>
 
-          <svg className='mx-2 w-[22px]'
+          <svg className='mx-2 w-[22px] @max-3xl:w-[18px] @max-xl:mx-1 @max-xl:w-3'
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 32 32"
             width="32"
@@ -291,10 +301,10 @@ export default function ComputerDesktop() {
             </g>
           </svg>
 
-          <Clock className='mx-4'/>
+          <Clock className='mx-4 @max-3xl:mx-3 @max-3xl:text-xs @max-xl:mx-1.5 @max-xl:text-[8px] text-[2.5cqh]'/>
 
           {/* thin rectangle */}
-        <div className='w-3 h-full border-l border-t border-b bg-[linear-gradient(to_bottom,rgba(255,255,255,0.35)_0%,rgba(255,255,255,0.10)_50%,rgba(255,255,255,0.05)_100%)] border-l border-gray-400/40 shadow-[inset_1px_0_0_rgba(255,255,255,0.4)]'/>
+        <div className='w-3 @max-xl:w-1.5 h-full border-l border-t border-b bg-[linear-gradient(to_bottom,rgba(255,255,255,0.35)_0%,rgba(255,255,255,0.10)_50%,rgba(255,255,255,0.05)_100%)] border-l border-gray-400/40 shadow-[inset_1px_0_0_rgba(255,255,255,0.4)]'/>
 
         </div>
 

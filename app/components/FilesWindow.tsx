@@ -1,5 +1,6 @@
 'use client';
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import "7.css/dist/7.scoped.css";
 import { useDialogFocus } from "./useDialogFocus";
@@ -40,26 +41,49 @@ const BACK = "/windows-7/back_normal_27px.png";
 const FORWARD = "/windows-7/forward_normal_27px.png";
 
 
+// On small screens the monitor's screen is tiny (a phone shows it about 400 x 225 px), so the window can't fit inside it.
+// There it opens "maximized" instead: covering the whole browser window. This query decides when.
+const FULLSCREEN_QUERY = "(max-width: 899px), (max-height: 599px)";
+
+// true while the browser window matches FULLSCREEN_QUERY; updates when the phone is rotated or the window resized.
+// useSyncExternalStore reads the browser safely (on the server there is no window, so it says false there).
+function useFullscreen() {
+  return useSyncExternalStore(
+    (onChange) => {
+      const m = window.matchMedia(FULLSCREEN_QUERY);
+      m.addEventListener("change", onChange);
+      return () => m.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia(FULLSCREEN_QUERY).matches,
+    () => false,
+  );
+}
+
 export default function FilesWindow({ onClose }: { onClose: () => void }) {
   const [openFolder, setOpenFolder] = useState<string | null>(null);
   const current = ITEMS.find((item) => item.name === openFolder);
   const dialog = useDialogFocus<HTMLDivElement>();
-  return (
+  const fullscreen = useFullscreen();
+
+  const win = (
     // glass frame
     <div
       ref={dialog}
       tabIndex={-1}
       role="dialog"
       aria-label="Files"
-      className="outline-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10
-      w-[min(900px,92cqw)] h-[min(600px,75cqh)] flex flex-col px-2 pb-2
-      rounded-lg border border-[#2b4f75]/60 backdrop-blur-md text-black font-segoe
+      className={`outline-none flex flex-col px-2 pb-2
+      border border-[#2b4f75]/60 backdrop-blur-md text-black font-segoe
       bg-[linear-gradient(to_bottom,rgba(200,225,245,0.80),rgba(160,195,225,0.70))]
-      shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6),0_10px_40px_rgba(0,0,0,0.45)]"
+      shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6),0_10px_40px_rgba(0,0,0,0.45)]
+      ${fullscreen
+        ? "fixed inset-0 z-50 h-dvh w-full" // maximized: the whole browser window
+        : "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-[min(900px,92cqw)] h-[min(600px,75cqh)] rounded-lg"}`}
     >
       {/* minimize / maximize / close, hanging from the top edge */}
       {/* 7.css styles only work inside "win7"; "title-bar active" turns on the bright colors */}
-      <div className="win7 flex justify-end">
+      {/* maximized on a phone, the buttons are drawn 1.4x bigger (zoom also grows the space they take) so the X is easy to tap */}
+      <div className="win7 flex justify-end" style={fullscreen ? { zoom: 1.4 } : undefined}>
         <div className="title-bar active bg-none! bg-transparent! border-0! shadow-none! p-0!">
           <div className="title-bar-controls">
             <button aria-label="Minimize" />
@@ -86,11 +110,13 @@ export default function FilesWindow({ onClose }: { onClose: () => void }) {
             <Image src={FORWARD} alt="" width={27} height={27} unoptimized />
           </button>
         </div>
-        <div className="flex-1 h-7 flex items-center gap-2 px-2 text-sm bg-white/90 border border-[#7a99bd] rounded-sm">
-          <Image src={FOLDER} alt="" width={16} height={16} className="w-4 h-auto" />
-          <span>▸ Computer ▸ Files ▸ {openFolder && <>{openFolder} ▸</>}</span>
+        {/* min-w-0 + truncate: on a narrow screen a long path ends in "…" instead of pushing the window wider */}
+        <div className="flex-1 min-w-0 h-7 flex items-center gap-2 px-2 text-sm bg-white/90 border border-[#7a99bd] rounded-sm">
+          <Image src={FOLDER} alt="" width={16} height={16} className="w-4 h-auto shrink-0" />
+          <span className="truncate">▸ Computer ▸ Files ▸ {openFolder && <>{openFolder} ▸</>}</span>
         </div>
-        <div className="hidden sm:flex w-56 h-7 items-center px-2 text-sm italic text-gray-500 bg-white/90 border border-[#7a99bd] rounded-sm">
+        {/* search box: decoration only, so it's skipped when maximized on a phone to leave room for the path */}
+        <div className={`${fullscreen ? "hidden" : "hidden sm:flex"} w-56 h-7 items-center px-2 text-sm italic text-gray-500 bg-white/90 border border-[#7a99bd] rounded-sm`}>
           Search Files
         </div>
       </div>
@@ -105,8 +131,8 @@ export default function FilesWindow({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="flex-1 min-h-0 flex">
-          {/* left navigation pane */}
-          <nav className="hidden sm:block w-48 shrink-0 overflow-y-auto py-2 text-sm border-r border-[#d5dfe9]">
+          {/* left navigation pane: decoration only (its links don't go anywhere), so it's skipped when maximized on a phone */}
+          <nav className={`${fullscreen ? "hidden" : "hidden sm:block"} w-48 shrink-0 overflow-y-auto py-2 text-sm border-r border-[#d5dfe9]`}>
             {NAV.map((group) => (
               <div key={group.heading} className="mb-3">
                 <p className="px-3 py-0.5 text-[#1e395b]">{group.heading}</p>
@@ -122,7 +148,8 @@ export default function FilesWindow({ onClose }: { onClose: () => void }) {
           {/* folder contents */}
           <div className="flex-1 overflow-y-auto">
             <p className="px-4 py-2 text-lg text-[#1e395b] border-b border-[#eef2f7]">{openFolder ?? "Files"}</p>
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-8 p-4">
+            {/* phones: tighter spacing so 2-3 items fit per row; from sm (640px) up: the original spacing */}
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-3 sm:gap-8 p-3 sm:p-4">
               {current ? (
                 current.files.map((file) => (
                   <a
@@ -147,7 +174,7 @@ export default function FilesWindow({ onClose }: { onClose: () => void }) {
                     className="flex flex-col items-center gap-1 p-2 text-sm rounded-sm border border-transparent
                     hover:bg-[#e5f3fb] hover:border-[#b8d6fb] focus:bg-[#cce8ff] focus:border-[#99d1ff]"
                   >
-                    <div className='relative w-32 h-32 perspective-[300px]'>
+                    <div className='relative size-24 sm:size-32 perspective-[300px]'>
                       <Image src={folderBack} alt="" width={192} height={192} className="w-full h-full absolute inset-0" />
                       {preview && (<Image src={preview} alt="" width={192} height={192} className="absolute inset-[20%] w-[60%] h-[60%] object-cover rotate-y-[-25deg] rotate-x-[-28deg] origin-left" />)}
                       <Image src={folderFront} alt="" width={192} height={192} className="w-full h-full absolute inset-0" />
@@ -161,12 +188,18 @@ export default function FilesWindow({ onClose }: { onClose: () => void }) {
         </div>
 
         {/* status bar */}
-        <div className="h-12 flex items-center gap-3 px-4 text-sm text-[#1e395b] border-t border-[#c5d5e8]
-        bg-[linear-gradient(to_bottom,#f1f5fb,#dbe6f3)]">
-          <Image src={FOLDER} alt="" width={32} height={32} className="w-8 h-auto" />
+        {/* slimmer when maximized on a phone, so the files get more of the screen */}
+        <div className={`${fullscreen ? "h-8 gap-2" : "h-12 gap-3"} flex items-center px-4 text-sm text-[#1e395b] border-t border-[#c5d5e8]
+        bg-[linear-gradient(to_bottom,#f1f5fb,#dbe6f3)]`}>
+          <Image src={FOLDER} alt="" width={32} height={32} className={`${fullscreen ? "w-5" : "w-8"} h-auto`} />
           {current ? current.files.length : ITEMS.length} items
         </div>
       </div>
     </div>
   );
+
+  // Maximized, the window is moved out of the monitor into <body> (a "portal"): inside the monitor it would be
+  // clipped by the screen's edges and shrunk by its zoom animation. React still treats it as part of the monitor,
+  // so clicks inside it don't reach the backdrop behind the monitor (which would close the computer).
+  return fullscreen ? createPortal(win, document.body) : win;
 }
