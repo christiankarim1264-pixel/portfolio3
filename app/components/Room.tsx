@@ -34,8 +34,10 @@ const CONTENT: Record<string, ContentPage> = {
 // How long the "zoom out of the monitor" takes before the modal is removed (match globals.css)
 const COMPUTER_CLOSE_MS = 750;
 
-// The computer modal: where it zooms from (the click point) and whether it's closing
-type ComputerState = { x: number; y: number; closing: boolean };
+// The computer modal: where it zooms from (the click point) and whether it's closing.
+// x/y = the click on the SCREEN (where the monitor flies out from); ox = the same spot measured inside the room,
+// which differs once the room has been scrolled sideways (portrait screens).
+type ComputerState = { x: number; y: number; ox: number; closing: boolean };
 
 export default function Room() {
   const [loaded, setLoaded] = useState(false);
@@ -48,6 +50,51 @@ export default function Room() {
   const [content, setContent] = useState<ContentPage | null>(null); // About / Military modal
   // where the last click/tap in the room happened (the monitor, when the computer opens)
   const lastPointer = useRef<{ x: number; y: number } | null>(null);
+  // the box the room scrolls sideways in (only on screens taller than they are wide)
+  const scroller = useRef<HTMLDivElement>(null);
+
+  // Portrait screens: the room is wider than the screen, so start with it centered on the desk.
+  // Runs again when the room finishes loading and when the phone is turned or the window resized.
+  useEffect(() => {
+    const center = () => {
+      const s = scroller.current;
+      if (s) s.scrollLeft = (s.scrollWidth - s.clientWidth) / 2;
+    };
+    center();
+    window.addEventListener('resize', center);
+    return () => window.removeEventListener('resize', center);
+  }, [loaded]);
+
+  // Swiping the room sideways. Spline's canvas cancels the browser's own touch scrolling (it wants touches for
+  // itself), so the swipe is done here by hand: the room moves with the finger. On wide screens there's nothing
+  // to scroll, so this does nothing there. (A swipe that starts on an object doesn't count as a tap; the scene
+  // script only treats a touch as a tap if the finger lifts without moving.)
+  useEffect(() => {
+    const s = scroller.current;
+    if (!s) return;
+    let startX = 0, startScroll = 0, swiping = false;
+    const onStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1 || s.scrollWidth <= s.clientWidth) return;
+      swiping = true;
+      startX = e.touches[0].clientX;
+      startScroll = s.scrollLeft;
+    };
+    const onMove = (e: TouchEvent) => {
+      if (!swiping || e.touches.length !== 1) return;
+      s.scrollLeft = startScroll - (e.touches[0].clientX - startX); // finger goes left -> room shows more of the right
+    };
+    const onEnd = () => { swiping = false; };
+    s.addEventListener('touchstart', onStart, { passive: true });
+    s.addEventListener('touchmove', onMove, { passive: true });
+    s.addEventListener('touchend', onEnd);
+    s.addEventListener('touchcancel', onEnd);
+    return () => {
+      s.removeEventListener('touchstart', onStart);
+      s.removeEventListener('touchmove', onMove);
+      s.removeEventListener('touchend', onEnd);
+      s.removeEventListener('touchcancel', onEnd);
+    };
+  }, []);
 
   // remember every click position (capture = we see it before Spline does)
   useEffect(() => {
@@ -70,7 +117,7 @@ export default function Room() {
     if (section === 'contact') { setContactOpen(true); return; }
     if (section === 'computer') {
       const p = from ?? { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-      setComputer({ ...p, closing: false });
+      setComputer({ ...p, ox: p.x + (scroller.current?.scrollLeft ?? 0), closing: false });
       return;
     }
     // About / Military open as modals, so the room never leaves the page
@@ -178,13 +225,25 @@ export default function Room() {
 
   return (
     <div className="relative h-lvh w-full overflow-hidden bg-black">
-      {/* the room; scales up toward the monitor while the computer is open */}
+      {/* Screens taller than they are wide (phones held upright): the room keeps the computer's 16:9 shape at full
+          height, so all of it is there, and this box scrolls it left and right. Only the room scrolls; the popups,
+          menu and banner below are outside this box, so they stay put. */}
+      {/* onScroll: Spline remembers where its canvas is on the screen and only re-measures when the PAGE scrolls
+          (a 'scroll' event on document). This box scrolling doesn't send that, so without this every click after a
+          swipe landed on the wrong spot in the room (the bulb opened a flag, or nothing happened). */}
       <div
-        className="room-zoom absolute inset-0"
-        data-zoomed={zoomed || undefined}
-        style={computer ? { transformOrigin: `${computer.x}px ${computer.y}px` } : undefined}
+        ref={scroller}
+        className="absolute inset-0 overflow-hidden portrait:overflow-x-auto portrait:overscroll-x-contain"
+        onScroll={() => document.dispatchEvent(new Event('scroll'))}
       >
-        <Spline scene={SCENE_URL} onLoad={(app) => { removeCameraControls(app); setLoaded(true); }} />
+        {/* the room; scales up toward the monitor while the computer is open */}
+        <div
+          className="room-zoom absolute inset-0 portrait:right-auto portrait:w-[calc(100lvh*16/9)]"
+          data-zoomed={zoomed || undefined}
+          style={computer ? { transformOrigin: `${computer.ox}px ${computer.y}px` } : undefined}
+        >
+          <Spline scene={SCENE_URL} onLoad={(app) => { removeCameraControls(app); setLoaded(true); }} />
+        </div>
       </div>
         {computer && (
           <ComputerModal
@@ -208,9 +267,47 @@ export default function Room() {
           )}
         </div>
       )}
+      <RotateHint />
       {/* on top of everything, even the loading screen: a recruiter can open the resume right away */}
       <SiteMenu onOpen={openFromMenu} />
 
+    </div>
+  );
+}
+
+// "Turn your device to landscape" banner, just under the Menu button.
+// It only shows while the screen is taller than it is wide (portrait: in Tailwind), so turning the phone hides it.
+// The X hides it until the page is reloaded. z-10: above the room, below the popups (z-20) and the menu (z-40).
+function RotateHint() {
+  const [closed, setClosed] = useState(false);
+  if (closed) return null;
+  return (
+    <div
+      role='status'
+      className='absolute left-4 right-4 top-17 z-10 hidden items-center gap-3 rounded-xl bg-[#11151b]/95 py-3 pl-4 pr-2
+        font-sans text-[#f3ece1] shadow-[0_12px_32px_rgb(0_0_0/0.5)] ring-1 ring-[#262b34] backdrop-blur portrait:flex'
+    >
+      {/* a phone turning sideways */}
+      <svg viewBox='0 0 24 24' aria-hidden className='size-7 shrink-0 text-[#ffd9a6]' fill='none' stroke='currentColor'
+        strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'>
+        <rect x='7' y='2.5' width='10' height='17' rx='2' />
+        <path d='M11 16.5h2' />
+        <path d='M19 13.5a6 6 0 0 1-4.5 7.3M15.8 18.6l-1.3 2.2 2.4.6' />
+      </svg>
+      <div className='flex-1 text-sm leading-snug'>
+        <p className='font-semibold'>For the best experience, turn your device to landscape.</p>
+        <p className='text-[#8b857c]'>Or swipe left and right to look around the room.</p>
+      </div>
+      <button
+        type='button'
+        aria-label='Close'
+        onClick={() => setClosed(true)}
+        className='grid size-11 shrink-0 place-items-center rounded-full text-[#f3ece1] transition-colors hover:bg-[#1c212a]'
+      >
+        <svg viewBox='0 0 24 24' aria-hidden className='size-5' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinecap='round'>
+          <path d='M6 6l12 12M18 6L6 18' />
+        </svg>
+      </button>
     </div>
   );
 }
