@@ -2,12 +2,12 @@
 
 import Spline from '@splinetool/react-spline';
 import type { Application } from '@splinetool/runtime';
-import Image from 'next/image';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ChessGame from './ChessGame';
 import ComputerModal from './ComputerModal';
 import ContactModal from './ContactModal';
 import ContentModal, { type ContentPage } from './ContentModal';
+import ResumeDocument from './ResumeDocument';
 import SiteMenu, { type MenuSection } from './SiteMenu';
 import { useDialogFocus } from './useDialogFocus';
 
@@ -313,63 +313,43 @@ function RotateHint() {
   );
 }
 
-// The resume pages as pictures, for touch screens (see ResumeModal).
-// They're made from resume.pdf (150 dpi PNGs); when the resume changes, make them again.
-const RESUME_PAGES = ['/resume-page-1.png', '/resume-page-2.png'];
-
-// The resume, shown as a popup over the room.
-// Computers show the real PDF (selectable text, zoom). Phones and tablets can't show a PDF inside a page
-// (iPhones show only page 1 as a flat picture, Android often a blank box), so on touch screens
-// (pointer-coarse:) the pages are shown as pictures you scroll through instead.
-// The button at the bottom opens the real PDF in its own tab on every device.
+// The resume, shown as a popup over the room: a web version of it (ResumeDocument, with the
+// text in app/lib/resume.ts). Unlike a PDF inside a page, it works on every device: on phones the text wraps to the
+// screen instead of a shrunken letter page, links work, and it scrolls inside the popup.
 function ResumeModal({ onClose }: { onClose: () => void }) {
   const dialog = useDialogFocus<HTMLDivElement>();
+  const bar = 'grid h-10 place-items-center rounded-full text-sm font-semibold shadow-lg transition-colors';
   return (
-    <div className='absolute inset-0 z-20 flex items-center justify-center bg-black/60' onClick={onClose}>
+    <div className='absolute inset-0 z-20 flex items-center justify-center bg-black/60 p-3 sm:p-6' onClick={onClose}>
       <div
         ref={dialog}
         tabIndex={-1}
         role='dialog'
         aria-modal='true'
         aria-label='Resume'
-        className='relative h-[90dvh] w-[min(850px,92vw)] bg-white outline-none'
+        className='flex h-full max-h-[94dvh] w-full max-w-[8.5in] flex-col font-sans outline-none'
         onClick={(e) => e.stopPropagation()}
       >
-        <iframe src='/resume.pdf' title='Resume' className='h-full w-full pointer-coarse:hidden' />
-        {/* touch screens: both pages as pictures, scrolling up and down; pb-20 keeps the last lines above the button */}
-        <div className='hidden h-full overflow-y-auto overscroll-contain bg-[#e9e6e1] pb-20 pointer-coarse:block'>
-          {RESUME_PAGES.map((src, i) => (
-            <Image
-              key={src}
-              src={src}
-              alt={`Resume, page ${i + 1} of ${RESUME_PAGES.length}`}
-              width={1275}
-              height={1650}
-              sizes='(max-width: 920px) 92vw, 850px'
-              className='mx-auto mb-2 h-auto w-full bg-white shadow'
-              priority={i === 0}
-            />
-          ))}
+        {/* top bar: download + close, above the sheet so they never cover the text */}
+        <div className='mb-2 flex shrink-0 items-center justify-end gap-2'>
+          <a href='/resume.pdf' download className={`${bar} bg-[#ffd9a6] px-4 text-[#14110d] hover:brightness-105`}>
+            Download PDF
+          </a>
+          <button
+            type='button'
+            aria-label='Close resume'
+            onClick={onClose}
+            className={`${bar} w-10 bg-[#151920]/90 text-[#f3ece1] ring-1 ring-[#2a2f38] hover:bg-[#232832]`}
+          >
+            <svg viewBox='0 0 24 24' aria-hidden className='size-5' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinecap='round'>
+              <path d='M6 6l12 12M18 6L6 18' />
+            </svg>
+          </button>
         </div>
-        {/* close button, pinned to the top-right corner of the box */}
-        <button
-          aria-label='Close resume'
-          onClick={onClose}
-          // computers: below the PDF viewer's toolbar. Touch screens (page pictures, no toolbar): in the corner, off the text
-          className='absolute right-8 top-14 h-8 w-8 rounded-full bg-black/70 text-xl leading-none text-white hover:bg-black
-            pointer-coarse:right-2 pointer-coarse:top-2 pointer-coarse:size-10'
-        >
-          ×
-        </button>
-        {/* backup for phones: open the PDF in its own tab */}
-        <a
-          href='/resume.pdf'
-          target='_blank'
-          rel='noreferrer'
-          className='absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/80 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:bg-black'
-        >
-          Open PDF in a new tab
-        </a>
+        {/* the sheet scrolls inside the popup; overscroll-contain stops the room behind it from moving */}
+        <div className='min-h-0 flex-1 overflow-y-auto overscroll-contain'>
+          <ResumeDocument />
+        </div>
       </div>
     </div>
   );

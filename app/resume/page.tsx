@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import ResumeDocument from '../components/ResumeDocument';
 
-// /resume: the resume as a web page (a preview; the homepage and its popups don't use it yet).
+// /resume: the resume as its own page, a direct link to send recruiters (christiankarim.dev/resume).
+// Same component and text as the resume popup in the room, so both always match.
 
 export const metadata: Metadata = {
   title: 'Resume | Christian Karim',
