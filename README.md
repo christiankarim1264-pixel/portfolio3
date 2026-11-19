@@ -21,6 +21,14 @@ My personal portfolio website. Instead of a scrolling page, the homepage is a 3D
 ### The computer
 Clicking the monitor zooms into a recreated Windows 7 desktop with a working **Files** window. It has folders for Projects (with links to my other sites), my Resume, and my Certifications (React, JavaScript, MySQL, HTML & CSS). You can open each one in a new tab.
 
+### The resume
+My resume is a real web page, not just a PDF, so it's easy to read on any device: on a phone the text wraps to the screen instead of showing a shrunken letter page, the links work, and screen readers get proper headings and lists.
+- **In the room:** clicking the frame on the wall (or Resume in the menu) opens it in a popup.
+- **Its own page:** `/resume` shows the same resume as a page you can link to directly.
+- Both have a **Download PDF** button for the file version.
+
+The resume's text lives in one data file, `app/lib/resume.ts`, separate from the layout, so the popup and the page always match.
+
 ### The chess bot
 "Can you beat me?" The bot is built to play like me:
 1. **Opening book:** in positions from my own games, it plays the moves I actually played, chosen by how often I played each one.
@@ -42,6 +50,7 @@ A small menu in the corner links to every section. It's there for quick visitors
 ```
 app/
   page.tsx               homepage (renders the room)
+  resume/page.tsx        /resume page
   components/
     Room.tsx             loads the Spline scene and opens modals when objects are clicked
     SiteMenu.tsx         corner menu
@@ -51,11 +60,14 @@ app/
     ChessGame.tsx        chess board and game logic
     ContentModal.tsx     About / Military modal
     ContactModal.tsx     contact form (sent through Formspree)
-  lib/chess-bot/         opening book + Maia move picking
+    ResumeDocument.tsx   the resume, styled like a sheet of paper (popup and /resume page)
+  lib/
+    resume.ts            the resume's text, as data
+    chess-bot/           opening book + Maia move picking
 public/
   chess/                 Maia model (maia.onnx) and opening book
   windows-7/             desktop images and icons
-  *.pdf, *-preview.png   resume, certificates and their thumbnails
+  *.pdf, *-preview.png   resume PDF (for download), certificates and their thumbnails
 ```
 
 ## Running it locally

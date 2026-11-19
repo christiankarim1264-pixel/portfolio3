@@ -137,7 +137,9 @@
 }
 
 body {
-  background: var(--background);
+  /* always black (was white in light mode): the room's scroll margin on phones (my-10 in Room.tsx) and
+     Safari's overscroll bounce show this color, so it has to match the room */
+  background: #000;
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }

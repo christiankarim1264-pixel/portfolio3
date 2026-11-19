@@ -225,7 +225,7 @@ export default function Room() {
   const zoomed = !!computer && !computer.closing;
 
   return (
-    <div className="relative h-lvh w-full overflow-hidden bg-black">
+    <div className="relative h-lvh w-full overflow-hidden bg-black pointer-coarse:my-10">
       {/* Screens taller than they are wide (phones held upright): the room keeps the computer's 16:9 shape at full
           height, so all of it is there, and this box scrolls it left and right. Only the room scrolls; the popups,
           menu and banner below are outside this box, so they stay put. */}
